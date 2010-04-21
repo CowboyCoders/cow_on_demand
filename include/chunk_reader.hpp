@@ -19,9 +19,20 @@ public:
               size_t size,
               const std::vector<size_t>& indices);
 
+    /**
+     * Size of chunk
+     */
     size_t chunk_size()
     { 
         return chunk_size_; 
+    }
+
+    /**
+     * Size of read data
+     */
+    size_t data_size()
+    {
+        return data_size_;
     }
     
     const char* chunk() { 
@@ -39,6 +50,7 @@ private:
     size_t max_read_;
     char* chunk_;
     size_t chunk_size_;
+    size_t data_size_;
 };
 
 #endif // ___CHUNK_READER_H___

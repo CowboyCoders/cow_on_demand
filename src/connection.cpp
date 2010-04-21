@@ -54,34 +54,37 @@ void connection::handle_read(const boost::system::error_code& e,
 
         if(!bad_uri) {
             std::string path(document_root_ + filename);
-            reader.read(path, parser.size(), parser.indices());
-            //reader.read(parser.file(), parser.size(), parser.index(), parser.count());
+            if(reader.read(path, parser.size(), parser.indices())) {
+                //reader.read(parser.file(), parser.size(), parser.index(), parser.count());
 
-            std::stringstream ss;
-            ss << "HTTP/1.0 200 OK\r\nContent-Length: "
-                    << reader.chunk_size() << "\r\n\r\n";
+                std::stringstream ss;
+                ss << "HTTP/1.0 200 OK\r\nContent-Length: "
+                        << reader.data_size() << "\r\n\r\n";
 
-            std::string reply = ss.str();
+                std::string reply = ss.str();
 
-            size_t buf_size = reply.length() + reader.chunk_size();
-            buf = new char[buf_size];
+                size_t buf_size = reply.length() + reader.data_size();
+                buf = new char[buf_size];
 
-            size_t counter = 0;
-            for(size_t i = 0; i < reply.length(); ++i) {
-                buf[counter++] = reply[i];
+                size_t counter = 0;
+                for(size_t i = 0; i < reply.length(); ++i) {
+                    buf[counter++] = reply[i];
+                }
+
+                BOOST_LOG_TRIVIAL(debug) << "Sending " << reader.data_size()
+                        << " bytes";
+
+                for(size_t i = 0; i < reader.data_size(); ++i) {
+                    buf[counter++] = (reader.chunk())[i];
+                }
+
+                boost::asio::async_write(socket_, boost::asio::buffer(buf, buf_size),
+                    strand_.wrap(
+                        boost::bind(&connection::handle_write, shared_from_this(),
+                        boost::asio::placeholders::error)));
+            } else {
+                // FAILURE
             }
-
-            BOOST_LOG_TRIVIAL(debug) << "Sending " << reader.chunk_size()
-                    << " bytes";
-
-            for(size_t i = 0; i < reader.chunk_size(); ++i) {
-                buf[counter++] = (reader.chunk())[i];
-            }
-
-            boost::asio::async_write(socket_, boost::asio::buffer(buf, buf_size),
-                strand_.wrap(
-                    boost::bind(&connection::handle_write, shared_from_this(),
-                    boost::asio::placeholders::error)));
         }
     }
 }

@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <iostream>
 #include <vector>
 #include <boost/log/trivial.hpp>
@@ -7,7 +8,8 @@
 ChunkReader::ChunkReader(size_t max_read)
     : max_read_(max_read),
     chunk_(0),
-    chunk_size_(0)
+    chunk_size_(0),
+    data_size_(0)
 {
 }
 
@@ -24,7 +26,9 @@ bool ChunkReader::read(std::string filename,
           size_t size,
           const std::vector<size_t>& indices) {
     filename_ = filename;
-    chunk_size_ = 0;
+    chunk_size_ = size * indices.size();
+    data_size_ = 0;
+    size_t read = 0;
 
     if(!open_filestream()) {
         BOOST_LOG_TRIVIAL(error)  << "error: can't open file '"
@@ -37,37 +41,40 @@ bool ChunkReader::read(std::string filename,
     filestream_.seekg(0, std::ios::end);
     size_t file_size = filestream_.tellg();
 
+    realloc_chunk(chunk_size_);
+
     for(std::vector<size_t>::const_iterator it = indices.begin(); it < indices.end(); it++) {
         size_t idx = *it;
+        BOOST_LOG_TRIVIAL(debug) << idx;
+
         size_t pos = size*idx;
 
         if(pos >= file_size) {
             BOOST_LOG_TRIVIAL(error) << "error: can't read outside of file";
             dealloc_chunk();
+            data_size_ = 0;
             return false;
         }
 
-        if(file_size - pos < size) {
-            chunk_size_ += file_size - pos;
-        } else {
-            chunk_size_ += size;
-        }
+        data_size_ += std::min(size, file_size - pos);
 
         BOOST_LOG_TRIVIAL(debug) << "chunk_size_: " << chunk_size_;
 
-        if(chunk_size_ > max_read_) {
-            BOOST_LOG_TRIVIAL(error) << "error: requested " << chunk_size_
+        if(data_size_ > max_read_) {
+            BOOST_LOG_TRIVIAL(error) << "error: requested " << data_size_
                     << "B, which exceeds the limit "
                     << max_read_ << "B";
 
             dealloc_chunk();
+            data_size_ = 0;
+
             return false;
         }
 
-        realloc_chunk(chunk_size_);
-
         filestream_.seekg(pos, std::ios::beg);
-        filestream_.read(chunk_, size);
+        filestream_.read(chunk_ + read, size);
+
+        read += std::min(size, file_size - pos);
     }
 
     return true;
