@@ -15,6 +15,10 @@ public:
               size_t index,
               size_t count);
 
+    bool read(std::string filename,
+              size_t size,
+              const std::vector<size_t>& indices);
+
     size_t chunk_size()
     { 
         return chunk_size_; 

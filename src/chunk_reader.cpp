@@ -1,4 +1,5 @@
 #include <iostream>
+#include <vector>
 #include <boost/log/trivial.hpp>
 
 #include "chunk_reader.hpp"
@@ -16,6 +17,66 @@ ChunkReader::~ChunkReader()
     filestream_.close();
 }
 
+/**
+ * Reads a list of chunks from file, based on indices and size.
+ */
+bool ChunkReader::read(std::string filename,
+          size_t size,
+          const std::vector<size_t>& indices) {
+    filename_ = filename;
+    chunk_size_ = 0;
+
+    if(!open_filestream()) {
+        BOOST_LOG_TRIVIAL(error)  << "error: can't open file '"
+                << filename_ << "' for reading";
+
+        dealloc_chunk();
+        return false;
+    }
+
+    filestream_.seekg(0, std::ios::end);
+    size_t file_size = filestream_.tellg();
+
+    for(std::vector<size_t>::const_iterator it = indices.begin(); it < indices.end(); it++) {
+        size_t idx = *it;
+        size_t pos = size*idx;
+
+        if(pos >= file_size) {
+            BOOST_LOG_TRIVIAL(error) << "error: can't read outside of file";
+            dealloc_chunk();
+            return false;
+        }
+
+        if(file_size - pos < size) {
+            chunk_size_ += file_size - pos;
+        } else {
+            chunk_size_ += size;
+        }
+
+        BOOST_LOG_TRIVIAL(debug) << "chunk_size_: " << chunk_size_;
+
+        if(chunk_size_ > max_read_) {
+            BOOST_LOG_TRIVIAL(error) << "error: requested " << chunk_size_
+                    << "B, which exceeds the limit "
+                    << max_read_ << "B";
+
+            dealloc_chunk();
+            return false;
+        }
+
+        realloc_chunk(chunk_size_);
+
+        filestream_.seekg(pos, std::ios::beg);
+        filestream_.read(chunk_, size);
+    }
+
+    return true;
+}
+
+/**
+ * Reads a range of chunks.
+ * @deprecated
+ */
 bool ChunkReader::read(std::string filename,
                        size_t size,
                        size_t index,

@@ -14,7 +14,7 @@ class connection
     private boost::noncopyable
 {
 public:
-  explicit connection(boost::asio::io_service& io_service);
+    explicit connection(boost::asio::io_service& io_service, const std::string& document_root);
 
   boost::asio::ip::tcp::socket& socket();
 
@@ -36,7 +36,7 @@ private:
   boost::array<char, 8192> buffer_;
   
   ChunkReader reader;
-
+  std::string document_root_;
   char * buf; // FIXME: temporary reply buffer
 };
 

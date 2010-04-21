@@ -12,15 +12,15 @@ class server
   : private boost::noncopyable
 {
 public:
-  explicit server(const std::string& address, const std::string& port, 
-                  std::size_t thread_pool_size);
+    explicit server(const std::string& address, const std::string& port,
+                    const std::string& document_root, std::size_t thread_pool_size);
 
   void run();
   void stop();
 
 private:
   void handle_accept(const boost::system::error_code& e);
-
+  std::string document_root_;
   std::size_t thread_pool_size_;
 
   boost::asio::io_service io_service_;

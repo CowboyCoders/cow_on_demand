@@ -7,10 +7,10 @@
 #include "connection.hpp"
 #include "req_parser.hpp"
 
-connection::connection(boost::asio::io_service& io_service)
-    : strand_(io_service),
-    socket_(io_service),
-    reader(1048576)
+connection::connection(boost::asio::io_service& io_service,
+                       const std::string& document_root)
+    : strand_(io_service), document_root_(document_root),
+      socket_(io_service), reader(1048576)
 {
 }
 
@@ -41,8 +41,21 @@ void connection::handle_read(const boost::system::error_code& e,
 
         std::cout << std::endl;
 
-        if(parser.file() == "testdata" || parser.file() == "big_buck_bunny") {
-            reader.read(parser.file(), parser.size(), parser.index(), parser.count());
+        // Massage URI
+        bool bad_uri = false;
+
+        std::string filename(parser.file());
+
+        if(filename.find_first_of('/') == 0 || filename.find("..") != std::string::npos ||
+           filename.find("./") != std::string::npos) {
+            bad_uri = true;
+            BOOST_LOG_TRIVIAL(error) << "error: BAD request. Possible hacking attempt";
+        }
+
+        if(!bad_uri) {
+            std::string path(document_root_ + filename);
+            reader.read(path, parser.size(), parser.indices());
+            //reader.read(parser.file(), parser.size(), parser.index(), parser.count());
 
             std::stringstream ss;
             ss << "HTTP/1.0 200 OK\r\nContent-Length: "
@@ -57,18 +70,18 @@ void connection::handle_read(const boost::system::error_code& e,
             for(size_t i = 0; i < reply.length(); ++i) {
                 buf[counter++] = reply[i];
             }
-            
-            std::cout << "LOG: sending " << reader.chunk_size() 
-                    << " bytes" << std::endl;
+
+            BOOST_LOG_TRIVIAL(debug) << "Sending " << reader.chunk_size()
+                    << " bytes";
 
             for(size_t i = 0; i < reader.chunk_size(); ++i) {
                 buf[counter++] = (reader.chunk())[i];
             }
 
             boost::asio::async_write(socket_, boost::asio::buffer(buf, buf_size),
-                                     strand_.wrap(
-                                             boost::bind(&connection::handle_write, shared_from_this(),
-                                                         boost::asio::placeholders::error)));
+                strand_.wrap(
+                    boost::bind(&connection::handle_write, shared_from_this(),
+                    boost::asio::placeholders::error)));
         }
     }
 }
