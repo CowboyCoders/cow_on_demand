@@ -10,7 +10,7 @@
 connection::connection(boost::asio::io_service& io_service,
                        const std::string& document_root)
     : strand_(io_service), document_root_(document_root),
-      socket_(io_service), reader(1048576)
+      socket_(io_service), reader(1024*1024)
 {
 }
 

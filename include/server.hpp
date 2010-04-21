@@ -42,7 +42,6 @@ private:
   boost::asio::io_service io_service_;
   boost::asio::ip::tcp::acceptor acceptor_;
   connection_ptr new_connection_; // next connection
-
 };
 
 #endif // ___SERVER_H___ 

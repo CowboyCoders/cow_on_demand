@@ -105,7 +105,8 @@ bool ReqParser::parse(const std::string& line)
 
                 for(std::vector<std::string>::iterator it = indices.begin(); it < indices.end(); it++) {
                     int a = atoi((*it).c_str());
-                    if(a >= 0) {
+
+                    if(*it != "" && a >= 0) {
                         indices_.push_back(a);
                     } else {
                         BOOST_LOG_TRIVIAL(error) << "parser error: invalid index given";
