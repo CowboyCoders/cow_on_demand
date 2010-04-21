@@ -1,11 +1,12 @@
-#include "chunk_reader.hpp"
-
 #include <iostream>
+#include <boost/log/trivial.hpp>
+
+#include "chunk_reader.hpp"
 
 ChunkReader::ChunkReader(size_t max_read)
     : max_read_(max_read),
-      chunk_(0),
-      chunk_size_(0)
+    chunk_(0),
+    chunk_size_(0)
 {
 }
 
@@ -21,10 +22,10 @@ bool ChunkReader::read(std::string filename,
                        size_t count)
 {
     filename_ = filename;
+
     if(!open_filestream()) {
-        std::cerr << "error: can't open file '"
-                  << filename_ << "' for reading"
-                  << std::endl;
+        BOOST_LOG_TRIVIAL(error)  << "error: can't open file '"
+                << filename_ << "' for reading";
 
         dealloc_chunk();
         return false;
@@ -35,20 +36,20 @@ bool ChunkReader::read(std::string filename,
     
     size_t pos = size * index;
     if(pos >= file_size) {
-        std::cerr << "error: can't read outside of file"
-                  << std::endl;
+        BOOST_LOG_TRIVIAL(error) << "error: can't read outside of file";
 
         dealloc_chunk();
         return false;
     }
 
     size_t chunk_size =
-        file_size-pos < size*count ? file_size-pos : size*count;
+            file_size-pos < size*count ? file_size-pos : size*count;
 
     if(chunk_size > max_read_) {
-        std::cerr << "error: requested " << chunk_size
-                  << "B, which exceeds the limit " 
-                  << max_read_ << "B" << std::endl;
+        BOOST_LOG_TRIVIAL(error) << "error: requested " << chunk_size
+                << "B, which exceeds the limit "
+                << max_read_ << "B";
+
         dealloc_chunk();
         return false;
     }
@@ -68,6 +69,7 @@ void ChunkReader::realloc_chunk(size_t chunk_size)
     if(chunk_) {
         delete [] chunk_;
     }
+
     chunk_ = new char[chunk_size_];
 }
 
@@ -85,6 +87,7 @@ bool ChunkReader::open_filestream()
     if(filestream_.is_open()) {
         filestream_.close();
     }
+
     filestream_.open(filename_.c_str());
     return filestream_.is_open();
 }

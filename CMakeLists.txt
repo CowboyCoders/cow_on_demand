@@ -46,5 +46,5 @@ target_link_libraries(on_demand_server
     ${Boost_REGEX_LIBRARY}
     ${Boost_SYSTEM_LIBRARY}
     ${Boost_THREAD_LIBRARY}
-	 ${Boost_LOG_LIBRARY}
+    ${Boost_LOG_LIBRARY}
 )

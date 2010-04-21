@@ -7,7 +7,7 @@
  */
 int main(int argc, char* argv[]) {
     if(argc != 3) {
-        std::cerr << "usage: ip port" << std::endl;
+        std::cerr << "Usage: on_demand_server <ip> <port> <document root>" << std::endl;
         return 1;
     }
 
