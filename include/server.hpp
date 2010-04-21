@@ -8,14 +8,30 @@
 #include <boost/shared_ptr.hpp>
 #include "connection.hpp"
 
+/**
+ * Main server and dispatcher class.
+ */
 class server
   : private boost::noncopyable
 {
 public:
+    /**
+     * @param address Address to listen to
+     * @param port Port to listen to
+     * @param document_root Document root, path containing accessible files.
+     * @param thread_pool_size Maximum number of server threads.
+     */
     explicit server(const std::string& address, const std::string& port,
                     const std::string& document_root, std::size_t thread_pool_size);
 
+  /**
+   * Starts the server.
+   */
   void run();
+
+  /**
+   * Stops the server.
+   */
   void stop();
 
 private:

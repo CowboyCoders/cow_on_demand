@@ -6,15 +6,28 @@
 
 class ChunkReader {
 public:
+    /**
+     * @param max_read Maximum size to return from a single request.
+     */
     ChunkReader(size_t max_read);
 
     ~ChunkReader();
 
+    /**
+     * @deprecated
+     */
     bool read(std::string filename,
               size_t size,
               size_t index,
               size_t count);
 
+    /**
+     * Read a not necessarily sequential list of chunks based on the
+     * supplied indices.
+
+     * @param size Chunk size
+     * @param indices Chunk indices to read
+     */
     bool read(std::string filename,
               size_t size,
               const std::vector<size_t>& indices);

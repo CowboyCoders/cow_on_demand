@@ -11,7 +11,13 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    server s(argv[1], argv[2], argv[3], 5);
+    // Make sure the document root ends with a trailing slash
+    std::string root(argv[3]);
+    if(root.find_last_of('/') != root.size() - 1) {
+        root = root + "/";
+    }
+
+    server s(argv[1], argv[2], root, 5);
 
     s.run();
 

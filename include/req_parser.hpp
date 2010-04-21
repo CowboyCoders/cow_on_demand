@@ -7,6 +7,9 @@
 #include <boost/regex.hpp>
 #include <boost/tokenizer.hpp>
 
+/**
+ * Request parser responsible for handling the HTTP side of things.
+ */
 class ReqParser {
 public:
     ReqParser()
@@ -26,28 +29,48 @@ public:
     {
     }
 
+    /**
+     * Consumes a single character.
+     */
     bool consume(char c);
 
+    /**
+     * The parsed list of indices to use as response.
+     */
     std::vector<size_t> indices() const
     {
         return indices_;
     }
 
+    /**
+     * Requested file name.
+     */
     std::string file() const
     {
         return file_;
     }
 
+    /**
+     * Supplied size parameter.
+     */
     size_t size() const
     {
         return size_;
     }
 
+    /**
+     * Supplied index parameter.
+     * @deprecated
+     */
     size_t index() const
     {
         return index_;
     }
 
+    /**
+     * Supplied range size (i.e. chunk count) parameter.
+     * @deprecated
+     */
     size_t count() const
     {
         return count_;
