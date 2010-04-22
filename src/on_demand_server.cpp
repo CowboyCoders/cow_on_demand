@@ -1,4 +1,5 @@
 #include <iostream>
+#include <boost/log/trivial.hpp>
 
 #include "server.hpp"
 
@@ -17,8 +18,10 @@ int main(int argc, char* argv[]) {
         root = root + "/";
     }
 
-    server s(argv[1], argv[2], root, 5);
+    BOOST_LOG_TRIVIAL(info) << "Starting server on " << argv[1] << ":"
+                            << argv[2] << " serving " << root;
 
+    server s(argv[1], argv[2], root, 5);
     s.run();
 
     return 0;
