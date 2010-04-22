@@ -53,7 +53,6 @@ void connection::handle_read(const boost::system::error_code& e,
         if(!bad_uri) {
             std::string path(document_root_ + filename);
             if(reader_.read(path, parser.size(), parser.indices())) {
-                //reader.read(parser.file(), parser.size(), parser.index(), parser.count());
 
                 std::stringstream ss;
                 ss << "HTTP/1.0 200 OK\r\nContent-Length: "
