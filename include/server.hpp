@@ -16,6 +16,8 @@ class server
 {
 public:
     /**
+     * Creates and initializs a new on_demand_server
+     *
      * @param address Address to listen to
      * @param port Port to listen to
      * @param document_root Document root, path containing accessible files.

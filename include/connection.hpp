@@ -20,14 +20,33 @@ class connection
     private boost::noncopyable
 {
 public:
+    /**
+     * Creates a new connection
+     *
+     * @param io_service The socket which the connection will send data to
+     * @param document_root The root catalog where all the documents are
+     */
     explicit connection(boost::asio::io_service& io_service, const std::string& document_root);
 
-    boost::asio::ip::tcp::socket& socket();
+    /**
+     * Returns the socket which the connection sends data to
+     *
+     * @return the tcp socket
+     */
+    boost::asio::ip::tcp::socket& socket()
+    {
+        return socket_;
+    }
 
     /**
      * Starts the connection
      */
     void start();
+
+    /**
+     * The maximum size of a request (in bytes)
+     */
+    const static int MAX_REQUEST_SIZE=1024*1024*10;
 
 private:
     void handle_read(const boost::system::error_code& e,
@@ -44,7 +63,7 @@ private:
     /// Buffer for incoming data.
     boost::array<char, 8192> buffer_;
 
-    ChunkReader reader;
+    chunk_reader reader_;
     std::string document_root_;
     char * buf; // FIXME: temporary reply buffer
 };

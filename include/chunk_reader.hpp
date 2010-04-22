@@ -4,22 +4,15 @@
 #include <fstream>
 #include <string>
 
-class ChunkReader {
+class chunk_reader {
 public:
     /**
+     * Creates and initalizes a new chunk_reader.
      * @param max_read Maximum size to return from a single request.
      */
-    ChunkReader(size_t max_read);
+    chunk_reader(size_t max_read);
 
-    ~ChunkReader();
-
-    /**
-     * @deprecated
-     */
-    bool read(std::string filename,
-              size_t size,
-              size_t index,
-              size_t count);
+    ~chunk_reader();
 
     /**
      * Read a not necessarily sequential list of chunks based on the
@@ -34,6 +27,8 @@ public:
 
     /**
      * Size of chunk
+     *
+     * @return a size_t describing the size
      */
     size_t chunk_size()
     { 
@@ -42,12 +37,19 @@ public:
 
     /**
      * Size of read data
+     *
+     * @return a size_t describing how much data was read
      */
     size_t data_size()
     {
         return data_size_;
     }
     
+    /**
+     * Returns a pointer to the read data
+     *
+     * @return the pointer to the data
+     */
     const char* chunk() { 
         return chunk_; 
     }

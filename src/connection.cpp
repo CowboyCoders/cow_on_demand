@@ -10,13 +10,8 @@
 connection::connection(boost::asio::io_service& io_service,
                        const std::string& document_root)
     : strand_(io_service), document_root_(document_root),
-      socket_(io_service), reader(1024*1024)
+      socket_(io_service), reader_(MAX_REQUEST_SIZE)
 {
-}
-
-boost::asio::ip::tcp::socket& connection::socket()
-{
-    return socket_;
 }
 
 void connection::start()
@@ -32,14 +27,17 @@ void connection::handle_read(const boost::system::error_code& e,
                              std::size_t bytes_transferred)
 {
     if(!e) {
-        ReqParser parser;
+        req_parser parser;
+
+        std::stringstream req;
+        req << std::endl;
 
         for(size_t i = 0; i < bytes_transferred; ++i) {
-            std::cout << buffer_[i];
+            req << buffer_[i];
             parser.consume(buffer_[i]);
         }
 
-        std::cout << std::endl;
+        BOOST_LOG_TRIVIAL(info) << "connection: request was: " << req.str();
 
         // Massage URI
         bool bad_uri = false;
@@ -54,16 +52,16 @@ void connection::handle_read(const boost::system::error_code& e,
 
         if(!bad_uri) {
             std::string path(document_root_ + filename);
-            if(reader.read(path, parser.size(), parser.indices())) {
+            if(reader_.read(path, parser.size(), parser.indices())) {
                 //reader.read(parser.file(), parser.size(), parser.index(), parser.count());
 
                 std::stringstream ss;
                 ss << "HTTP/1.0 200 OK\r\nContent-Length: "
-                        << reader.data_size() << "\r\n\r\n";
+                        << reader_.data_size() << "\r\n\r\n";
 
                 std::string reply = ss.str();
 
-                size_t buf_size = reply.length() + reader.data_size();
+                size_t buf_size = reply.length() + reader_.data_size();
                 buf = new char[buf_size];
 
                 size_t counter = 0;
@@ -71,11 +69,11 @@ void connection::handle_read(const boost::system::error_code& e,
                     buf[counter++] = reply[i];
                 }
 
-                BOOST_LOG_TRIVIAL(debug) << "Sending " << reader.data_size()
+                BOOST_LOG_TRIVIAL(debug) << "Sending " << reader_.data_size()
                         << " bytes";
 
-                for(size_t i = 0; i < reader.data_size(); ++i) {
-                    buf[counter++] = (reader.chunk())[i];
+                for(size_t i = 0; i < reader_.data_size(); ++i) {
+                    buf[counter++] = (reader_.chunk())[i];
                 }
 
                 boost::asio::async_write(socket_, boost::asio::buffer(buf, buf_size),

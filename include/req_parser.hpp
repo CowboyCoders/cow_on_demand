@@ -10,20 +10,16 @@
 /**
  * Request parser responsible for handling the HTTP side of things.
  */
-class ReqParser {
+class req_parser {
 public:
-    ReqParser()
+    req_parser()
         : size_(0), 
-          index_(0), 
-          count_(0),
           indices_(),
           consumer_state(line),
           parser_state(http_get),
           // regular expressions
           http_get_expr("GET /(\\S+) HTTP/1.(?:0|1)"),
           size_header_expr("[Ss]ize: ?([0-9]+)"),
-          index_header_expr("[Ii]ndex: ?([0-9]+)"),
-          count_header_expr("[Cc]ount: ?([0-9]+)"),
           indices_header_expr("[Ii]ndices: (([0-9]+[ ]{0,1})+)"),
           empty_line_expr("^\\s*$")
     {
@@ -31,11 +27,16 @@ public:
 
     /**
      * Consumes a single character.
+     * Returns true if everything worked
+     * 
+     * @return true if the char could be consumed, otherwise false
      */
     bool consume(char c);
 
     /**
      * The parsed list of indices to use as response.
+     *
+     * @return The indices which should be read 
      */
     std::vector<size_t> indices() const
     {
@@ -44,6 +45,8 @@ public:
 
     /**
      * Requested file name.
+     *
+     * @return The request file name
      */
     std::string file() const
     {
@@ -52,28 +55,12 @@ public:
 
     /**
      * Supplied size parameter.
+     *
+     * @return The size of piece
      */
     size_t size() const
     {
         return size_;
-    }
-
-    /**
-     * Supplied index parameter.
-     * @deprecated
-     */
-    size_t index() const
-    {
-        return index_;
-    }
-
-    /**
-     * Supplied range size (i.e. chunk count) parameter.
-     * @deprecated
-     */
-    size_t count() const
-    {
-        return count_;
     }
 
 private:
@@ -81,8 +68,6 @@ private:
 
     std::string file_;
     size_t size_;
-    size_t index_;
-    size_t count_;
     std::vector<size_t> indices_;
 
     std::string current_line;

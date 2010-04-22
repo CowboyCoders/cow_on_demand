@@ -1,13 +1,13 @@
 #include <cstdlib> // for atio
 #include <boost/algorithm/string.hpp> // for boost::split
 #include <boost/log/trivial.hpp>
-
+#include <sstream>
 #include "req_parser.hpp"
 
 /**
  * Parser state management.
  */
-bool ReqParser::consume(char c)
+bool req_parser::consume(char c)
 {
     if(consumer_state == line) {
         if(c == '\r') {
@@ -57,7 +57,7 @@ bool ReqParser::consume(char c)
 /**
  * Extracts actionable information from the request.
  */
-bool ReqParser::parse(const std::string& line)
+bool req_parser::parse(const std::string& line)
 {
     if(parser_state == http_get) {
         boost::smatch matches;
@@ -66,6 +66,7 @@ bool ReqParser::parse(const std::string& line)
             if(matches.size() == 2) {
                 file_ = matches[1];
                 parser_state = headers;
+                BOOST_LOG_TRIVIAL(debug) << "parser: header parsed sucessfully";
                 return true;
             } else {
                 BOOST_LOG_TRIVIAL(error) << "parser error: wrong number of matches "
@@ -86,6 +87,7 @@ bool ReqParser::parse(const std::string& line)
             if(matches.size() == 2) {
                 std::string match = matches[1];
                 size_ = atoi(match.c_str());
+                BOOST_LOG_TRIVIAL(debug) << "parser: size parsed sucessfully. value: " << size_;
                 return true;
             } else {
                 BOOST_LOG_TRIVIAL(error) << "parser error: wrong number of matches "
@@ -112,41 +114,18 @@ bool ReqParser::parse(const std::string& line)
                         BOOST_LOG_TRIVIAL(error) << "parser error: invalid index given";
                     }
                 }
+                
+                std::stringstream res;
+                for(std::vector<size_t>::iterator it = indices_.begin(); it != indices_.end(); ++it) {
+                    res << *it << " ";
+                }
+                
+                BOOST_LOG_TRIVIAL(debug) << "parser: indices parsed sucessfully. values: " << res.str();
 
                 return true;
             }
-            /*
-             * TODO: REMOVE THIS
-             * BOOST_LOG_TRIVIAL(fatal) << "HITS: " << hits;
-             * for(int i = 1; i < hits; i++) {
-             *    std::string m(matches[i].first, matches[i].second);
-             *    BOOST_LOG_TRIVIAL(fatal) << "HIT: " << matches[i];
-             * }
-             */
-
-        /*
-        } else if(boost::regex_match(current_line, matches, index_header_expr)) {
-            if(matches.size() == 2) {
-                std::string match = matches[1];
-                index_ = atoi(match.c_str());
-                return true;
-            } else {
-                BOOST_LOG_TRIVIAL(error) << "parser error: wrong number of matches for index_header_expr pattern";
-                return false; 
-            }
-        } else if(boost::regex_match(current_line, matches, count_header_expr)) {
-            if(matches.size() == 2) {
-                std::string match = matches[1];
-                count_ = atoi(match.c_str());
-
-                return true;
-            } else {
-            BOOST_LOG_TRIVIAL(error) << "parser error: wrong number of matches "
-                          << "for index_header_expr pattern";
-                return false; 
-            }
-        */
         } else if(boost::regex_match(current_line, empty_line_expr)) {
+            BOOST_LOG_TRIVIAL(debug) << "parser: sucessfully parsed empty line";
             return true;
         } else {
             return false;

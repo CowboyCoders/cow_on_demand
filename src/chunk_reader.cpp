@@ -5,7 +5,7 @@
 
 #include "chunk_reader.hpp"
 
-ChunkReader::ChunkReader(size_t max_read)
+chunk_reader::chunk_reader(size_t max_read)
     : max_read_(max_read),
     chunk_(0),
     chunk_size_(0),
@@ -13,7 +13,7 @@ ChunkReader::ChunkReader(size_t max_read)
 {
 }
 
-ChunkReader::~ChunkReader()
+chunk_reader::~chunk_reader()
 {
     dealloc_chunk();
     filestream_.close();
@@ -22,7 +22,7 @@ ChunkReader::~ChunkReader()
 /**
  * Reads a list of chunks from file, based on indices and size.
  */
-bool ChunkReader::read(std::string filename,
+bool chunk_reader::read(std::string filename,
           size_t size,
           const std::vector<size_t>& indices) {
     filename_ = filename;
@@ -45,7 +45,7 @@ bool ChunkReader::read(std::string filename,
 
     for(std::vector<size_t>::const_iterator it = indices.begin(); it < indices.end(); it++) {
         size_t idx = *it;
-        BOOST_LOG_TRIVIAL(debug) << idx;
+        BOOST_LOG_TRIVIAL(debug) << "chunk_reader: reading index: " << idx;
 
         size_t pos = size*idx;
 
@@ -58,7 +58,7 @@ bool ChunkReader::read(std::string filename,
 
         data_size_ += std::min(size, file_size - pos);
 
-        BOOST_LOG_TRIVIAL(debug) << "chunk_size_: " << chunk_size_;
+        BOOST_LOG_TRIVIAL(debug) << "chunk_reader: reading size: " << chunk_size_;
 
         if(data_size_ > max_read_) {
             BOOST_LOG_TRIVIAL(error) << "error: requested " << data_size_
@@ -80,57 +80,7 @@ bool ChunkReader::read(std::string filename,
     return true;
 }
 
-/**
- * Reads a range of chunks.
- * @deprecated
- */
-bool ChunkReader::read(std::string filename,
-                       size_t size,
-                       size_t index,
-                       size_t count)
-{
-    filename_ = filename;
-
-    if(!open_filestream()) {
-        BOOST_LOG_TRIVIAL(error)  << "error: can't open file '"
-                << filename_ << "' for reading";
-
-        dealloc_chunk();
-        return false;
-    }
-
-    filestream_.seekg(0, std::ios::end);
-    size_t file_size = filestream_.tellg();
-    
-    size_t pos = size * index;
-    if(pos >= file_size) {
-        BOOST_LOG_TRIVIAL(error) << "error: can't read outside of file";
-
-        dealloc_chunk();
-        return false;
-    }
-
-    size_t chunk_size =
-            file_size-pos < size*count ? file_size-pos : size*count;
-
-    if(chunk_size > max_read_) {
-        BOOST_LOG_TRIVIAL(error) << "error: requested " << chunk_size
-                << "B, which exceeds the limit "
-                << max_read_ << "B";
-
-        dealloc_chunk();
-        return false;
-    }
-    
-    realloc_chunk(chunk_size);
-    
-    filestream_.seekg(pos, std::ios::beg);
-    filestream_.read(chunk_, chunk_size);
-    
-    return true;
-}
-
-void ChunkReader::realloc_chunk(size_t chunk_size)
+void chunk_reader::realloc_chunk(size_t chunk_size)
 {
     chunk_size_ = chunk_size;
     
@@ -141,7 +91,7 @@ void ChunkReader::realloc_chunk(size_t chunk_size)
     chunk_ = new char[chunk_size_];
 }
 
-void ChunkReader::dealloc_chunk()
+void chunk_reader::dealloc_chunk()
 {
     if(chunk_) {
         delete [] chunk_;
@@ -150,7 +100,7 @@ void ChunkReader::dealloc_chunk()
     }
 }
 
-bool ChunkReader::open_filestream()
+bool chunk_reader::open_filestream()
 {
     if(filestream_.is_open()) {
         filestream_.close();
