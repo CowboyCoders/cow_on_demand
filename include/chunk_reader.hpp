@@ -64,7 +64,7 @@ public:
 
    /**
     * This function returns how much data was read.
-    * @return A size_t describing how much data was rea.d
+    * @return A size_t describing how much data was read.
     */
     size_t data_size()
     {
