@@ -53,7 +53,7 @@ bool chunk_reader::read(std::string filename,
     filename_ = filename;
     chunk_size_ = size * indices.size();
     data_size_ = 0;
-    size_t read = 0;
+    size_t chunk_offset = 0;
 
     if(!open_filestream()) {
         BOOST_LOG_TRIVIAL(error)  << "error: can't open file '"
@@ -81,7 +81,8 @@ bool chunk_reader::read(std::string filename,
             return false;
         }
 
-        data_size_ += std::min(size, file_size - pos);
+        size_t bytes_to_read = std::min(size, file_size - pos);
+        data_size_ += bytes_to_read;
 
         BOOST_LOG_TRIVIAL(debug) << "chunk_reader: reading size: " << chunk_size_;
 
@@ -97,9 +98,9 @@ bool chunk_reader::read(std::string filename,
         }
 
         filestream_.seekg(pos, std::ios::beg);
-        filestream_.read(chunk_ + read, size);
+        filestream_.read(chunk_ + chunk_offset, bytes_to_read);
 
-        read += std::min(size, file_size - pos);
+        chunk_offset += bytes_to_read;
     }
 
     return true;
