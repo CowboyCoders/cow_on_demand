@@ -123,7 +123,7 @@ void connection::handle_write(const boost::system::error_code& e)
         boost::system::error_code ignored_ec;
         socket_.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ignored_ec);
     }  else  {
-        BOOST_LOG_TRIVIAL(error) << e.message();
+        BOOST_LOG_TRIVIAL(error) << "connection: handle_write: boost_error: " << e.message();
     }
 
     // No new asynchronous operations are started. This means that all shared_ptr
